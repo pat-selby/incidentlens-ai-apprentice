@@ -1,0 +1,26 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { cases, createMap, reviewAnswer, termHits } from '../engine.js';
+
+test('captures only inspected evidence and expert reasoning', () => {
+  const item = cases[0];
+  const map = createMap(item, item.recommended, 'The registered VPN explains the location, but I would verify the active session first.', ['vpn', 'device']);
+  assert.equal(map.inspectedEvidence.length, 2);
+  assert.equal(map.expertReasoning.includes('registered VPN'), true);
+  assert.equal(map.origin, 'synthetic-demo');
+});
+test('rejects unsupported decisions and empty reasoning', () => {
+  const item = cases[0];
+  assert.throws(() => createMap(item, 'Ban all users', 'A very long explanation that is still invalid.', []));
+  assert.throws(() => createMap(item, item.recommended, 'Looks fine', []));
+});
+test('feedback separately checks action, evidence, and guardrail', () => {
+  const item = cases[1];
+  const full = reviewAnswer(item, null, item.recommended, 'The sender domain and payment link differ. Call the known vendor to verify before changing payment details.');
+  assert.equal(full.score, 3);
+  const weak = reviewAnswer(item, null, 'Approve payment', 'It seems fine to me.');
+  assert.equal(weak.score, 0);
+});
+test('term matching handles case and punctuation', () => {
+  assert.deepEqual(termHits('Verify the VPN-IP.', ['vpn', 'verify']), ['vpn', 'verify']);
+});
