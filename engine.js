@@ -15,7 +15,7 @@ export const cases = [
     question: 'The location looks impossible, but the device and VPN signals agree. Why verify before closing this alert?',
     evidenceTerms: ['vpn', 'device', 'session', 'ip', 'location'],
     guardrailTerms: ['verify', 'confirm', 'check', 'validate', 'escalate', 'revoke'],
-    guardrail: 'Verify that the VPN IP is approved and the session belongs to the user; escalate if either check fails.'
+    guardrail: 'Verify that the VPN IP is approved and the session belongs to the user; escalate if either check fails.', criticalEvidenceKey: 'vpn'
   },
   {
     id: 'invoice-phish', category: 'Email', severity: 'Critical', time: '11:17 UTC',
@@ -33,7 +33,7 @@ export const cases = [
     question: 'Why is the familiar display name not enough, and what must happen before any payment detail changes?',
     evidenceTerms: ['domain', 'link', 'url', 'sender', 'vendor'],
     guardrailTerms: ['call', 'phone', 'verify', 'confirm', 'quarantine', 'out of band'],
-    guardrail: 'Do not change payment details until the vendor confirms the request through a known channel.'
+    guardrail: 'Do not change payment details until the vendor confirms the request through a known channel.', criticalEvidenceKey: 'domain'
   },
   {
     id: 'maintenance-scan', category: 'Network', severity: 'Medium', time: '02:08 UTC',
@@ -51,17 +51,26 @@ export const cases = [
     question: 'What makes this scan plausibly authorized, and which mismatch would make you escalate?',
     evidenceTerms: ['ticket', 'scope', 'subnet', 'source', 'time'],
     guardrailTerms: ['verify', 'validate', 'check', 'monitor', 'escalate', 'mismatch'],
-    guardrail: 'Confirm the host, timing, and target subnet match the change ticket; escalate any deviation.'
+    guardrail: 'Confirm the host, timing, and target subnet match the change ticket; escalate any deviation.', criticalEvidenceKey: 'ticket'
   }
 ];
 
 export function normalize(text) { return String(text || '').toLowerCase().normalize('NFKD').replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim(); }
 export function termHits(text, terms) { const body = normalize(text); return terms.filter(term => body.includes(normalize(term))); }
-export function createMap(caseData, choice, reasoning, inspected) {
+export function makeCoachQuestion(caseData, choice, inspected = []) {
+  if (!caseData?.choices.includes(choice)) throw new Error('Choose a valid decision.');
+  const critical = caseData.evidence.find(item => item.key === caseData.criticalEvidenceKey);
+  if (critical && !inspected.includes(critical.key)) return `Before choosing "${choice}", what would you need to check in ${critical.label}, and why?`;
+  if (choice !== caseData.recommended) return `You chose "${choice}". Which evidence supports that call, and what would make you change course?`;
+  return caseData.question;
+}
+export function createMap(caseData, choice, reasoning, inspected, details = {}) {
   if (!caseData || !caseData.choices.includes(choice)) throw new Error('Choose a valid decision.');
   if (normalize(reasoning).length < 24) throw new Error('Add at least one sentence explaining your decision.');
+  if (normalize(details.exception).length < 12) throw new Error('Describe an exception or signal that could change this decision.');
+  if (normalize(details.guardrail).length < 12) throw new Error('Describe a safety check before acting.');
   const inspectedEvidence = caseData.evidence.filter(item => inspected.includes(item.key)).map(({ label, value, key }) => ({ label, value, key }));
-  return { id: caseData.id, title: caseData.title, category: caseData.category, decision: choice, expertReasoning: reasoning.trim(), inspectedEvidence, coachQuestion: caseData.question, recommended: caseData.recommended, guardrail: caseData.guardrail, capturedAt: new Date().toISOString(), origin: 'synthetic-demo' };
+  return { id: caseData.id, title: caseData.title, category: caseData.category, decision: choice, expertReasoning: reasoning.trim(), expertException: details.exception.trim(), expertGuardrail: details.guardrail.trim(), inspectedEvidence, workTrace: Array.isArray(details.trace) ? details.trace.slice() : [], coachQuestion: makeCoachQuestion(caseData, choice, inspected), recommended: caseData.recommended, referenceGuardrail: caseData.guardrail, capturedAt: new Date().toISOString(), origin: 'synthetic-demo' };
 }
 export function reviewAnswer(caseData, map, choice, reasoning) {
   const evidence = termHits(reasoning, caseData.evidenceTerms);
@@ -71,11 +80,13 @@ export function reviewAnswer(caseData, map, choice, reasoning) {
   return {
     score, correctChoice, evidence, guardrails,
     feedback: [
-      correctChoice ? 'Your action matches the expert path.' : `The safer path for this case is: ${caseData.recommended}.`,
+      correctChoice ? 'Your action matches the reference path.' : `The reference path for this case is: ${caseData.recommended}.`,
       evidence.length ? `You named relevant evidence: ${evidence.join(', ')}.` : 'Name at least one signal that supports your decision.',
       guardrails.length ? 'You included a verification or escalation step.' : `Add a safety check: ${caseData.guardrail}`
     ],
     expertNote: map?.expertReasoning || null,
+    expertException: map?.expertException || null,
+    expertGuardrail: map?.expertGuardrail || null,
     guardrail: caseData.guardrail
   };
 }
