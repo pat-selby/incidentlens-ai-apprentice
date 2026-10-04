@@ -138,7 +138,7 @@ async function speak(kind) {
     await currentAudio.play();
     $('voiceStatus').textContent = 'Playing ElevenLabs voice.';
   } catch {
-    $('voiceStatus').textContent = 'Using browser voice. ElevenLabs is not configured on this site.';
+    $('voiceStatus').textContent = 'ElevenLabs is unavailable. Using browser voice.';
     browserSpeak(fallbackText);
   }
 }

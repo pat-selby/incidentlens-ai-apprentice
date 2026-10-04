@@ -1,6 +1,6 @@
 # IncidentLens: recording guide
 
-Each Hack-Nation video must be at most 60 seconds. Record these in your own voice, show the live product for the demo and technical videos, and keep every claim tied to the current prototype. The sponsor challenge is ElevenLabs AI Apprentice. This version uses browser speech, not the ElevenLabs API.
+Each Hack-Nation video must be at most 60 seconds. Record these in your own voice, show the live product for the demo and technical videos, and keep every claim tied to the current prototype. The sponsor challenge is ElevenLabs AI Apprentice. Use the [Vercel demo](https://incidentlens-ai-apprentice.vercel.app/) for ElevenLabs voice.
 
 ## Team introduction
 
@@ -8,11 +8,11 @@ Each Hack-Nation video must be at most 60 seconds. Record these in your own voic
 
 ## Product demo
 
-"Here is an impossible-travel alert. As the expert, I open the device and VPN signals, then choose to verify the session before closing or escalating. IncidentLens asks why. I explain that the VPN may account for the location jump, but I still need to confirm the approved IP and user session. The app saves my decision, evidence, reasoning, and guardrail in a Work Map. Now I switch to apprentice mode. I choose an action and explain my reasoning. The coach checks my action, evidence, and safety step, then shows the expert's note. The goal is to teach judgment, not just the right button."
+"Here is an impossible-travel alert. As the expert, I open the device and VPN signals, then choose to verify the session before closing or escalating. IncidentLens asks why, and ElevenLabs speaks the question. I explain the evidence, name an exception that could change my decision, and record a safety check. The Work Map saves the sequence I followed. In apprentice mode, I make my own call and explain it. The coach checks my action, evidence, and safety step, then shows the expert's reasoning and exception. The goal is to teach judgment, not just the right button."
 
 ## Technical walkthrough
 
-"IncidentLens is a browser-based prototype with three synthetic alert cases. It records which evidence cards an expert opens, their decision, and their explanation. A Work Map stores the result locally and can be exported as JSON. Apprentice mode compares a learner's choice and written reasoning with the case's reference path. The three-part feedback engine checks the action, relevant signals, and a verification guardrail. Browser speech APIs support dictation and spoken coaching where available. The current feedback is deterministic, so it does not claim to be an LLM or an ElevenLabs integration. The repo includes tests for map capture and feedback."
+"IncidentLens runs on Vercel with three synthetic alert cases. It records the evidence an expert opens, the decision, reasoning, exception, and guardrail. The Work Map stays in the browser and exports as JSON. Apprentice mode compares the learner's response with an authored reference path. The feedback engine is deterministic. A server function sends only authored case text to ElevenLabs Text-to-Speech, keeping the API key and freeform notes out of the browser request. The repo includes tests for map capture, coaching, and the voice endpoint."
 
 ## Final submission check
 
