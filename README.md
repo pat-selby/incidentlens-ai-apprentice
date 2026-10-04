@@ -2,6 +2,8 @@
 
 IncidentLens is a working prototype for Hack-Nation's **ElevenLabs AI Apprentice** challenge. It focuses on one expert workflow: security alert triage. The expert opens evidence, chooses an action, and explains a judgment call. That explanation becomes a Work Map. A new analyst then practices the same case and gets feedback on their action, evidence, and guardrail.
 
+**[Try the live demo](https://pat-selby.github.io/incidentlens-ai-apprentice/)** | [Read the 60-second recording guide](PITCH.md)
+
 **Demo status:** The current prototype runs entirely in the browser with synthetic cases. It uses built-in browser speech recognition for optional dictation and speech synthesis for a spoken coach where supported. Its feedback engine is deterministic keyword and decision matching, not a large language model. It does not currently call ElevenLabs. This distinction matters for an honest submission.
 
 ## Run
