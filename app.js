@@ -1,4 +1,5 @@
 import { cases, createMap, makeCoachQuestion, reviewAnswer } from './engine.js';
+import { sceneSteps } from './scene.js';
 
 const key = 'incidentlens-workmaps-v1';
 const $ = id => document.getElementById(id);
@@ -9,6 +10,9 @@ let maps = readMaps();
 let speechRecognition = null;
 let workTrace = [];
 let currentAudio = null;
+let learnerResult = null;
+let sceneIndex = 0;
+let sceneTimer = null;
 
 function readMaps() {
   try { const data = JSON.parse(localStorage.getItem(key) || '{}'); return data && typeof data === 'object' && !Array.isArray(data) ? data : {}; }
@@ -17,6 +21,56 @@ function readMaps() {
 function saveMaps() { localStorage.setItem(key, JSON.stringify(maps)); }
 function el(tag, className, text) { const item = document.createElement(tag); if (className) item.className = className; if (text !== undefined) item.textContent = text; return item; }
 function clear(node) { node.replaceChildren(); }
+
+function stopScene() {
+  if (sceneTimer) clearInterval(sceneTimer);
+  sceneTimer = null;
+  $('scene').classList.remove('playing');
+  $('scenePlay').textContent = '▶ Play events';
+}
+
+function renderScene() {
+  const steps = sceneSteps(active, maps[active.id], learnerResult, { inspected: [...inspected], selected });
+  const step = steps[sceneIndex];
+  $('sceneCase').textContent = active.category.toUpperCase() + ' CASE';
+  $('sceneLabel').textContent = `0${sceneIndex + 1} / ${step.label}`;
+  $('sceneTitle').textContent = step.title;
+  $('sceneDetail').textContent = step.detail;
+  $('sceneSignal').textContent = step.signal;
+  $('sceneCount').textContent = `${sceneIndex + 1} / ${steps.length}`;
+  $('sceneBack').disabled = sceneIndex === 0;
+  $('sceneNext').disabled = sceneIndex === steps.length - 1;
+  clear($('sceneNodes'));
+  const spacing = window.innerWidth < 650 ? 108 : 157;
+  steps.forEach((item, index) => {
+    const offset = index - sceneIndex;
+    const node = el('button', 'scene-node' + (offset === 0 ? ' active' : ''));
+    node.type = 'button'; node.setAttribute('aria-pressed', String(offset === 0));
+    node.setAttribute('aria-label', `Step ${index + 1}: ${item.label}, ${item.title}`);
+    node.tabIndex = Math.abs(offset) > 2 ? -1 : 0;
+    node.style.transform = `translate3d(calc(-50% + ${offset * spacing}px), -50%, ${110 - Math.abs(offset) * 125}px) rotateY(${-offset * 13}deg)`;
+    node.style.opacity = String(Math.max(.18, 1 - Math.abs(offset) * .27));
+    node.style.zIndex = String(steps.length - Math.abs(offset));
+    node.append(el('span', '', item.label), el('strong', '', item.title), el('small', '', item.signal));
+    node.addEventListener('click', () => { stopScene(); sceneIndex = index; renderScene(); });
+    $('sceneNodes').append(node);
+  });
+}
+
+function setScene(index) {
+  sceneIndex = Math.max(0, Math.min(5, index));
+  renderScene();
+}
+
+function playScene() {
+  if (sceneTimer) { stopScene(); return; }
+  if (sceneIndex === 5) sceneIndex = 0;
+  renderScene(); $('scene').classList.add('playing'); $('scenePlay').textContent = 'Ⅱ Pause';
+  sceneTimer = setInterval(() => {
+    if (sceneIndex === 5) { stopScene(); return; }
+    sceneIndex += 1; renderScene();
+  }, 2100);
+}
 
 function setMode(mode) {
   for (const name of ['expert', 'learner', 'map']) {
@@ -31,7 +85,7 @@ function setMode(mode) {
 }
 
 function renderCase() {
-  inspected = new Set(); selected = ''; workTrace = [];
+  inspected = new Set(); selected = ''; workTrace = []; learnerResult = null; stopScene(); sceneIndex = 0;
   $('caseBanner').replaceChildren();
   const bannerTop = el('div', 'banner-top');
   bannerTop.append(el('span', 'severity severity-' + active.severity.toLowerCase(), active.severity + ' priority'), el('span', 'banner-category', active.category + ' · ' + active.time));
@@ -42,14 +96,14 @@ function renderCase() {
     const button = el('button', 'evidence-item'); button.type = 'button'; button.setAttribute('aria-expanded', 'false');
     const heading = el('span', 'evidence-item-heading'); heading.append(el('strong', '', item.label), el('span', 'evidence-caret', '+'));
     button.append(heading, el('span', 'evidence-value', item.value), el('span', 'evidence-detail', item.detail));
-    button.addEventListener('click', () => { const open = button.classList.toggle('open'); button.setAttribute('aria-expanded', String(open)); button.querySelector('.evidence-caret').textContent = open ? '−' : '+'; if (open) { inspected.add(item.key); workTrace.push({ action: 'inspected', evidenceKey: item.key, at: new Date().toISOString() }); } $('inspectCount').textContent = `${inspected.size} of ${active.evidence.length} signals inspected`; if (selected) $('coachQuestion').textContent = makeCoachQuestion(active, selected, [...inspected]); });
+    button.addEventListener('click', () => { const open = button.classList.toggle('open'); button.setAttribute('aria-expanded', String(open)); button.querySelector('.evidence-caret').textContent = open ? '−' : '+'; if (open) { inspected.add(item.key); workTrace.push({ action: 'inspected', evidenceKey: item.key, at: new Date().toISOString() }); setScene(2); } $('inspectCount').textContent = `${inspected.size} of ${active.evidence.length} signals inspected`; if (selected) $('coachQuestion').textContent = makeCoachQuestion(active, selected, [...inspected]); });
     $('evidenceList').append(button);
   }
   $('inspectCount').textContent = '0 signals inspected';
   clear($('decisionOptions'));
   for (const choice of active.choices) {
     const button = el('button', 'decision-option', choice); button.type = 'button';
-    button.addEventListener('click', () => { selected = choice; workTrace.push({ action: 'decided', choice, at: new Date().toISOString() }); for (const other of $('decisionOptions').children) other.classList.toggle('chosen', other === button); $('promptBox').classList.remove('hidden'); $('coachQuestion').textContent = makeCoachQuestion(active, choice, [...inspected]); $('expertError').textContent = ''; });
+    button.addEventListener('click', () => { selected = choice; workTrace.push({ action: 'decided', choice, at: new Date().toISOString() }); for (const other of $('decisionOptions').children) other.classList.toggle('chosen', other === button); $('promptBox').classList.remove('hidden'); $('coachQuestion').textContent = makeCoachQuestion(active, choice, [...inspected]); $('expertError').textContent = ''; setScene(3); });
     $('decisionOptions').append(button);
   }
   $('expertWhy').value = maps[active.id]?.expertReasoning || '';
@@ -61,6 +115,7 @@ function renderCase() {
   $('feedback').classList.add('hidden'); $('feedbackEmpty').classList.remove('hidden');
   $('speakFeedback').classList.add('hidden');
   renderLearner();
+  renderScene();
 }
 
 function renderLearner() {
@@ -98,7 +153,7 @@ function saveMap() {
   try {
     const map = createMap(active, selected, $('expertWhy').value, [...inspected], { exception: $('expertException').value, guardrail: $('expertGuardrail').value, trace: workTrace });
     if (!inspected.size) throw new Error('Inspect at least one signal before saving.');
-    maps[active.id] = map; saveMaps(); $('expertError').textContent = ''; setMode('map');
+    maps[active.id] = map; saveMaps(); selected = ''; $('expertError').textContent = ''; setScene(4); setMode('map');
   } catch (error) { $('expertError').textContent = error.message; }
 }
 
@@ -107,8 +162,15 @@ function submitAnswer() {
   const why = $('learnerWhy').value.trim();
   if (!choice || why.length < 15) { $('feedbackEmpty').querySelector('p').textContent = 'Choose an action and write at least one sentence explaining your reasoning.'; return; }
   const result = reviewAnswer(active, maps[active.id], choice, why);
+  learnerResult = result; setScene(5);
   const box = $('feedback'); clear(box); $('feedbackEmpty').classList.add('hidden'); box.classList.remove('hidden');
   const score = el('div', 'score'); score.append(el('strong', '', `${result.score}/3`), el('span', '', result.score === 3 ? 'A sound, supported decision' : 'A decision to improve')); box.append(score);
+  const checks = el('div', 'score-checks');
+  for (const [label, passed] of [['Action', result.correctChoice], ['Evidence', result.evidence.length > 0], ['Safety check', result.guardrails.length > 0]]) {
+    const check = el('span', passed ? 'check-pass' : 'check-miss', `${passed ? '✓' : '○'} ${label}: ${passed ? '1' : '0'}`);
+    checks.append(check);
+  }
+  box.append(checks);
   const list = el('ul', 'feedback-list'); for (const line of result.feedback) list.append(el('li', '', line)); box.append(list);
   const guard = el('div', 'feedback-guardrail'); guard.append(el('span', 'step', 'THE GUARDRAIL'), el('p', '', result.guardrail)); box.append(guard);
   if (result.expertNote) { const expert = el('div', 'expert-note'); expert.append(el('span', 'step', 'EXPERT NOTE'), el('p', '', result.expertNote)); box.append(expert); }
@@ -175,4 +237,8 @@ $('voiceExpert').addEventListener('click', () => dictate('expertWhy'));
 $('voiceLearner').addEventListener('click', () => dictate('learnerWhy'));
 $('exportMap').addEventListener('click', exportMaps);
 $('resetBtn').addEventListener('click', () => { if (confirm('Clear the saved Work Map and reset the demo?')) { maps = {}; localStorage.removeItem(key); renderCase(); setMode('expert'); } });
+$('sceneBack').addEventListener('click', () => { stopScene(); setScene(sceneIndex - 1); });
+$('sceneNext').addEventListener('click', () => { stopScene(); setScene(sceneIndex + 1); });
+$('scenePlay').addEventListener('click', playScene);
+window.addEventListener('resize', renderScene);
 renderCase();

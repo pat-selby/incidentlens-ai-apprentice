@@ -2,9 +2,11 @@
 
 IncidentLens is a working prototype for Hack-Nation's **ElevenLabs AI Apprentice** challenge. It focuses on one expert workflow: security alert triage. The expert opens evidence, chooses an action, and explains a judgment call. That explanation becomes a Work Map. A new analyst then practices the same case and gets feedback on their action, evidence, and guardrail.
 
+The concrete problem is alert triage knowledge loss. A security rule can flag a suspicious sign-in or message, but it cannot teach a new analyst why a senior analyst treats a matching VPN, changed sender domain, or maintenance ticket as decisive context. IncidentLens records that reasoning and its exceptions, then uses it in a practice handoff. The current version demonstrates the workflow with synthetic cases. It has not been validated in a live security operations center.
+
 **[Try the live voice demo](https://incidentlens-ai-apprentice.vercel.app/)** | [Read the 60-second recording guide](PITCH.md)
 
-**Demo status:** The cases are synthetic. The expert flow captures inspection order, a decision, reasoning, exceptions, and a safety check. The coach question changes with the selected decision and evidence opened. Scoring is deterministic, not a large language model. ElevenLabs Text-to-Speech narrates the question and feedback through a server-side Vercel function. Both voice buttons were tested on the live Vercel site on October 3, 2026. The [GitHub Pages mirror](https://pat-selby.github.io/incidentlens-ai-apprentice/) uses browser speech because it has no server function.
+**Demo status:** The cases are synthetic. The expert flow captures inspection order, a decision, reasoning, exceptions, and a safety check. The interactive 3D scene shows the event, alert, evidence, decision, guardrail, and learner practice for the selected case, then updates when the user works through it. The coach question changes with the selected decision and evidence opened. Scoring is deterministic, not a trained model or a large language model. ElevenLabs Text-to-Speech narrates the question and feedback through a server-side Vercel function. The [GitHub Pages mirror](https://pat-selby.github.io/incidentlens-ai-apprentice/) uses browser speech because it has no server function.
 
 ## Run
 
@@ -18,10 +20,10 @@ Open `http://localhost:8000`. No packages or secrets are needed. Run `node --tes
 
 ## Demo flow
 
-1. Choose **Impossible travel, or a known VPN?** and open the evidence cards.
+1. Press **Play events** to see the 3D event path, then choose **Impossible travel, or a known VPN?** and open the evidence cards.
 2. Choose **Verify VPN and session, then close or escalate**. Explain why the location signal alone is not enough.
 3. Explain the decision, name an exception, and record the guardrail. Save the Work Map and review the inspection trace.
-4. Switch to **Apprentice practice**. Choose a response and explain your evidence and safety check. Review the three-part feedback.
+4. Switch to **Apprentice practice**. Choose a response and explain your evidence and safety check. Review the action, evidence, and safety points as the event view advances.
 5. Try the email and network cases. Export the Work Map as JSON.
 
 ## Design and safety

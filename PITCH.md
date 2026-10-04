@@ -8,11 +8,11 @@ Each Hack-Nation video must be at most 60 seconds. Record these in your own voic
 
 ## Product demo
 
-"Here is an impossible-travel alert. As the expert, I open the device and VPN signals, then choose to verify the session before closing or escalating. IncidentLens asks why, and ElevenLabs speaks the question. I explain the evidence, name an exception that could change my decision, and record a safety check. The Work Map saves the sequence I followed. In apprentice mode, I make my own call and explain it. The coach checks my action, evidence, and safety step, then shows the expert's reasoning and exception. The goal is to teach judgment, not just the right button."
+"A security rule flags two distant sign-ins eight minutes apart. The 3D view shows the alert moving through evidence, decision, and handoff. I inspect the device and VPN signals, then explain why I would verify the session before closing. I also record what would make me escalate. IncidentLens saves that judgment in a Work Map. In apprentice mode, I make the call myself and see which parts of my reasoning matched the expert's path. ElevenLabs speaks the coaching question and feedback."
 
 ## Technical walkthrough
 
-"IncidentLens runs on Vercel with three synthetic alert cases. It records the evidence an expert opens, the decision, reasoning, exception, and guardrail. The Work Map stays in the browser and exports as JSON. Apprentice mode compares the learner's response with an authored reference path. The feedback engine is deterministic. A server function sends only authored case text to ElevenLabs Text-to-Speech, keeping the API key and freeform notes out of the browser request. The repo includes tests for map capture, coaching, and the voice endpoint."
+"IncidentLens addresses a security training problem: rules flag alerts, but they do not preserve an experienced analyst's judgment. The 3D scene follows six stages of a synthetic case and updates as I inspect evidence and make a decision. The Work Map stores my reasoning and exception in the browser. The coach gives one point each for action, evidence, and a safety check. It is a transparent rule-based engine, not a trained model. A Vercel function calls ElevenLabs to speak authored case text without sending my notes or exposing the API key."
 
 ## Final submission check
 

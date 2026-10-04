@@ -17,8 +17,16 @@
 
     <main id="top">
       <section class="hero">
-        <div class="hero-copy"><p class="eyebrow">HACK-NATION 2026 · ELEVENLABS CHALLENGE</p><h1>Teach the judgment<br><em>behind the alert.</em></h1><p class="hero-description">A rulebook says what to do. An experienced analyst knows when the rule does not fit. IncidentLens captures that missing "why" during a real decision, then lets a new analyst practice it.</p><div class="hero-actions"><button id="startExpert" class="primary-button" type="button">Start expert walkthrough <span>↗</span></button><button id="startLearner" class="secondary-button" type="button">Try apprentice mode</button></div></div>
+        <div class="hero-copy"><p class="eyebrow">HACK-NATION 2026 · ELEVENLABS CHALLENGE</p><h1>Teach the judgment<br><em>behind the alert.</em></h1><p class="hero-description">Security teams lose time on alerts that look dangerous until someone checks the context. The experienced analyst knows what to verify and when to escalate. IncidentLens captures that reasoning and lets a new analyst practice the same call.</p><div class="hero-actions"><button id="startExpert" class="primary-button" type="button">Start expert walkthrough <span>↗</span></button><button id="startLearner" class="secondary-button" type="button">Try apprentice mode</button></div></div>
         <div class="hero-visual" aria-hidden="true"><div class="signal-line line-one"></div><div class="signal-line line-two"></div><div class="signal-line line-three"></div><div class="hero-node node-a">ALERT</div><div class="hero-node node-b">WHY?</div><div class="hero-node node-c">WORK MAP</div><div class="hero-node node-d">PRACTICE</div><div class="visual-caption">DECISION KNOWLEDGE, PRESERVED</div></div>
+      </section>
+
+      <section class="model-section" aria-labelledby="modelTitle">
+        <div class="section-heading"><div><p class="eyebrow">SEE THE DECISION PATH</p><h2 id="modelTitle">What happens after an alert fires?</h2></div><p>Play the case, then make a decision yourself. The scene follows the same evidence and Work Map as the workbench below.</p></div>
+        <div class="model-layout">
+          <div class="scene-shell"><div class="scene-topline"><span>INCIDENTLENS / INTERACTIVE 3D VIEW</span><span id="sceneCase"></span></div><div id="scene" class="scene" role="group" aria-label="Animated security triage steps"><div class="scene-grid" aria-hidden="true"></div><div class="scene-track" aria-hidden="true"></div><div id="sceneNodes" class="scene-nodes"></div></div><div class="scene-controls"><button id="sceneBack" class="scene-control" type="button" aria-label="Previous event">←</button><button id="scenePlay" class="scene-control scene-play" type="button">▶ Play events</button><button id="sceneNext" class="scene-control" type="button" aria-label="Next event">→</button><span id="sceneCount" aria-live="polite"></span></div></div>
+          <div class="model-explain"><p id="sceneLabel" class="step"></p><h3 id="sceneTitle"></h3><p id="sceneDetail" aria-live="polite"></p><div class="model-signal"><span>WHAT THE SYSTEM KNOWS</span><strong id="sceneSignal"></strong></div><div class="model-truth"><strong>The model in this prototype</strong><p>The coach is a transparent rule-based engine. It gives one point each for the action, supporting evidence, and a safety check. ElevenLabs speaks the question and feedback. No trained model or live security feed is running.</p></div></div>
+        </div>
       </section>
 
       <section class="workbench" aria-labelledby="workbenchTitle">
